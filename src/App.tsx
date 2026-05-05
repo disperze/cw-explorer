@@ -4,13 +4,15 @@ import ContractListPage from './components/ContractListPage';
 import ContractDetailPage from './components/ContractDetailPage';
 import UploadPage from './components/UploadPage';
 import CreatePage from './components/CreatePage';
+import { WalletProvider, useWallet } from './context/WalletContext';
 import type { Contract, Page } from './data';
 
-export default function App() {
+function AppInner() {
   const [page, setPage] = useState<Page>('list');
   const [network, setNetwork] = useState('osmosis-1');
-  const [walletConnected, setWalletConnected] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const { address } = useWallet();
+  const walletConnected = address !== null;
 
   const handleSetNetwork = (n: string) => {
     setNetwork(n);
@@ -22,8 +24,6 @@ export default function App() {
       <Navbar
         network={network}
         setNetwork={handleSetNetwork}
-        walletConnected={walletConnected}
-        setWalletConnected={setWalletConnected}
         setPage={setPage}
       />
       {page === 'list' && (
@@ -49,5 +49,13 @@ export default function App() {
         <CreatePage walletConnected={walletConnected} network={network} setPage={setPage} />
       )}
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <WalletProvider>
+      <AppInner />
+    </WalletProvider>
   );
 }
