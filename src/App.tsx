@@ -39,6 +39,7 @@ function AppInner() {
           key={selectedContract.address}
           contract={selectedContract}
           walletConnected={walletConnected}
+          network={network}
           setPage={setPage}
         />
       )}
