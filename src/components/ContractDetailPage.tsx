@@ -12,10 +12,11 @@ type Tab = 'query' | 'execute' | 'migrate' | 'balances';
 interface Props {
   contract: Contract;
   walletConnected: boolean;
+  network: string;
   setPage: (p: Page) => void;
 }
 
-export default function ContractDetailPage({ contract, walletConnected, setPage }: Props) {
+export default function ContractDetailPage({ contract, walletConnected, network, setPage }: Props) {
   const [tab, setTab] = useState<Tab>('query');
 
   return (
@@ -49,7 +50,7 @@ export default function ContractDetailPage({ contract, walletConnected, setPage 
         ))}
       </div>
 
-      {tab === 'query' && <QueryTab contract={contract} />}
+      {tab === 'query' && <QueryTab contract={contract} network={network} />}
       {tab === 'execute' && <ExecuteTab contract={contract} walletConnected={walletConnected} />}
       {tab === 'migrate' && <MigrateTab contract={contract} walletConnected={walletConnected} />}
       {tab === 'balances' && <BalancesTab contract={contract} />}

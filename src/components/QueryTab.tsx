@@ -1,24 +1,43 @@
 import { useState } from 'react';
-import { sleep, syntaxHighlight } from '../utils';
+import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
+import { syntaxHighlight } from '../utils';
+import { NETWORKS } from '../data';
 import type { Contract } from '../data';
 
-interface Props { contract: Contract; }
+interface Props {
+  contract: Contract;
+  network: string;
+}
 
-export default function QueryTab({ contract: _contract }: Props) {
+export default function QueryTab({ contract, network }: Props) {
   const [msg, setMsg] = useState('{\n  "balance": {\n    "address": "osmo1…"\n  }\n}');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<Record<string, string> | null>(null);
+  const [result, setResult] = useState<unknown | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleQuery = async () => {
-    setLoading(true); setResult(null); setError(null);
-    await sleep(1400);
-    setLoading(false);
+    let parsedMsg: unknown;
     try {
-      JSON.parse(msg);
-      setResult({ balance: '1000000', denom: 'uosmo', account: 'osmo1xj9p7mq5x9gfkw4uqz2s8v3n0y5gfz8hkl4rt2' });
+      parsedMsg = JSON.parse(msg);
     } catch {
       setError('Invalid JSON in message body.');
+      return;
+    }
+
+    setLoading(true);
+    setResult(null);
+    setError(null);
+
+    try {
+      const net = NETWORKS.find(n => n.id === network);
+      if (!net) throw new Error('Unknown network.');
+      const client = await CosmWasmClient.connect(net.rpcUrl);
+      const response = await client.queryContractSmart(contract.address, parsedMsg);
+      setResult(response);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Query failed.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -37,7 +56,7 @@ export default function QueryTab({ contract: _contract }: Props) {
       <button className="btn-primary" onClick={handleQuery} disabled={loading} style={{ minWidth: 110 }}>
         {loading ? <><div className="spinner" />Querying…</> : 'Query'}
       </button>
-      {result && (
+      {result !== null && (
         <div className="result-code">
           <div className="result-label">Response</div>
           <pre className="result-json" dangerouslySetInnerHTML={{ __html: syntaxHighlight(result) }} />
