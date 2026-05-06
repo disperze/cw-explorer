@@ -1,34 +1,58 @@
 import { useState } from 'react';
+import { SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
+import { GasPrice } from '@cosmjs/stargate';
 import { NETWORKS } from '../data';
-import { sleep, trunc } from '../utils';
+import { trunc } from '../utils';
+import { useWallet } from '../context/WalletContext';
 import CopyBtn from './CopyBtn';
 import type { Contract } from '../data';
 
 interface Props {
   contract: Contract;
+  network: string;
   walletConnected: boolean;
 }
 
-const MOCK_TX = 'A1B2C3D4E5F6789012345678901234567890ABCDEF1234567890ABCDEF123456';
-
-export default function ExecuteTab({ contract: _contract, walletConnected }: Props) {
+export default function ExecuteTab({ contract, network, walletConnected }: Props) {
+  const { address, signer } = useWallet();
   const [msg, setMsg] = useState('{\n  "transfer": {\n    "recipient": "osmo1…",\n    "amount": "1000000"\n  }\n}');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ txhash: string } | null>(null);
+  const [result, setResult] = useState<{ txhash: string; explorer: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const network = NETWORKS[1];
-
   const handleExecute = async () => {
-    if (!walletConnected) { setError('Wallet not connected. Click "Connect Wallet" in the navbar.'); return; }
-    setLoading(true); setResult(null); setError(null);
-    await sleep(2000);
-    setLoading(false);
+    let parsedMsg: unknown;
     try {
-      JSON.parse(msg);
-      setResult({ txhash: MOCK_TX });
+      parsedMsg = JSON.parse(msg);
     } catch {
       setError('Invalid JSON in message body.');
+      return;
+    }
+
+    if (!address || !signer) {
+      setError('Wallet not connected. Click "Connect Wallet" in the navbar.');
+      return;
+    }
+
+    const net = NETWORKS.find(n => n.id === network);
+    if (!net) { setError('Unknown network.'); return; }
+
+    setLoading(true);
+    setResult(null);
+    setError(null);
+
+    try {
+      const client = await SigningCosmWasmClient.connectWithSigner(
+        net.rpcUrl,
+        signer,
+        { gasPrice: GasPrice.fromString(net.gasPrice) },
+      );
+      const res = await client.execute(address, contract.address, parsedMsg as Record<string, unknown>, 'auto');
+      setResult({ txhash: res.transactionHash, explorer: net.explorer });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Execution failed.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,7 +87,7 @@ export default function ExecuteTab({ contract: _contract, walletConnected }: Pro
             <span className="success-tx">{trunc(result.txhash, 16, 8)}</span>
             <CopyBtn text={result.txhash} />
           </div>
-          <a className="explorer-link" href={`${network.explorer}${result.txhash}`} target="_blank" rel="noopener noreferrer">
+          <a className="explorer-link" href={`${result.explorer}${result.txhash}`} target="_blank" rel="noopener noreferrer">
             View on Mintscan ↗
           </a>
         </div>
