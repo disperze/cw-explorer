@@ -189,10 +189,6 @@ Show the **10 latest contracts** by resolving from the most recent code ID:
 
 - [ ] Cache `CosmWasmClient` / `StargateClient` instances per network to avoid reconnecting on every action
 - [ ] Add network-aware `keplr.enable()` call when the user switches networks in the Navbar
-- [ ] Add transaction history per contract via `GET /cosmos/tx/v1beta1/txs?events=wasm._contract_address='{addr}'`
-- [ ] Support Ledger hardware wallets via `@cosmjs/ledger-amino`
-- [ ] Support additional wallet extensions (Leap, Cosmostation) by abstracting the signer interface
-- [ ] Integrate CosmosKit or Graz for multi-wallet support
 
 ---
 
