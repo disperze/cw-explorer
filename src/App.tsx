@@ -44,7 +44,7 @@ function AppInner() {
         />
       )}
       {page === 'upload' && (
-        <UploadPage walletConnected={walletConnected} setPage={setPage} />
+        <UploadPage walletConnected={walletConnected} network={network} setPage={setPage} />
       )}
       {page === 'create' && (
         <CreatePage walletConnected={walletConnected} network={network} setPage={setPage} />

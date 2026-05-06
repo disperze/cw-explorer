@@ -1,17 +1,24 @@
 import { useState, useRef } from 'react';
-import { sleep, fmtSize } from '../utils';
+import { SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
+import { GasPrice } from '@cosmjs/stargate';
+import { NETWORKS } from '../data';
+import { fmtSize, trunc } from '../utils';
+import { useWallet } from '../context/WalletContext';
+import CopyBtn from './CopyBtn';
 import type { Page } from '../data';
 
 interface Props {
   walletConnected: boolean;
+  network: string;
   setPage: (p: Page) => void;
 }
 
-export default function UploadPage({ walletConnected, setPage }: Props) {
+export default function UploadPage({ walletConnected, network, setPage }: Props) {
+  const { address, signer } = useWallet();
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ codeId: string } | null>(null);
+  const [result, setResult] = useState<{ codeId: number; txhash: string; explorer: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -27,14 +34,27 @@ export default function UploadPage({ walletConnected, setPage }: Props) {
   };
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || !address || !signer) return;
+
+    const net = NETWORKS.find(n => n.id === network);
+    if (!net) { setError('Unknown network.'); return; }
+
     setLoading(true); setResult(null); setError(null);
-    await sleep(2500);
-    setLoading(false);
-    if (file.name.endsWith('.wasm') || file.size > 0) {
-      setResult({ codeId: String(Math.floor(Math.random() * 8000) + 1000) });
-    } else {
-      setError('Upload failed: invalid Wasm binary.');
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const wasmBytes = new Uint8Array(buffer);
+      const client = await SigningCosmWasmClient.connectWithSigner(
+        net.rpcUrl,
+        signer,
+        { gasPrice: GasPrice.fromString(net.gasPrice) },
+      );
+      const res = await client.upload(address, wasmBytes, 'auto');
+      setResult({ codeId: res.codeId, txhash: res.transactionHash, explorer: net.explorer });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Upload failed.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -103,10 +123,16 @@ export default function UploadPage({ walletConnected, setPage }: Props) {
       </div>
 
       {result && (
-        <div className="code-id-block">
-          <div className="code-id-label">Code ID</div>
-          <div className="code-id-val">{result.codeId}</div>
-          <div style={{ marginTop: 12, fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)' }}>Contract stored on-chain successfully</div>
+        <div className="success-banner" style={{ marginTop: 24 }}>
+          <div className="success-banner-title">✓ Contract Uploaded — Code ID {result.codeId}</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Transaction</div>
+          <div className="success-banner-row">
+            <span className="success-tx">{trunc(result.txhash, 16, 8)}</span>
+            <CopyBtn text={result.txhash} />
+          </div>
+          <a className="explorer-link" href={`${result.explorer}${result.txhash}`} target="_blank" rel="noopener noreferrer">
+            View on Mintscan ↗
+          </a>
         </div>
       )}
       {error && <div className="error-msg mt-16">✕ {error}</div>}
