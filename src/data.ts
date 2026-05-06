@@ -95,14 +95,5 @@ export const MOCK_CONTRACTS: Record<string, Contract[]> = {
   ],
 };
 
-export const MOCK_BALANCES: TokenBalance[] = [
-  { denom: 'uosmo',    display: 'OSMO',        amount: '4820391045',  exponent: 6, logo: 'O' },
-  { denom: 'uatom',    display: 'ATOM',        amount: '812000000',   exponent: 6, logo: 'A' },
-  { denom: 'ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2', display: 'ATOM (IBC)', amount: '150000000', exponent: 6, logo: '↔' },
-  { denom: 'factory/osmo1zcntm7sgs7xtfq8yyuqm9qnxy6q8rfg7fjv0qjlf6xu4k0vfz24sv9fhlt/uusdc', display: 'USDC', amount: '9950000000', exponent: 6, logo: '$' },
-  { denom: 'ustars',   display: 'STARS',       amount: '25000000',    exponent: 6, logo: '★' },
-];
-
-export const WALLET_ADDR = 'osmo1xj9p7mq5x9gfkw4uqz2s8v3n0y5gfz8hkl4rt2';
 
 export const PAGE_SIZE = 5;

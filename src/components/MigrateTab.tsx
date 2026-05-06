@@ -1,33 +1,61 @@
 import { useState } from 'react';
-import { sleep, trunc } from '../utils';
+import { SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
+import { GasPrice } from '@cosmjs/stargate';
+import { NETWORKS } from '../data';
+import { trunc } from '../utils';
+import { useWallet } from '../context/WalletContext';
 import CopyBtn from './CopyBtn';
 import type { Contract } from '../data';
 
 interface Props {
   contract: Contract;
+  network: string;
   walletConnected: boolean;
 }
 
-const MOCK_TX = 'F9E8D7C6B5A4321098765432109876543210FEDCBA9876543210FEDCBA987654';
-
-export default function MigrateTab({ contract: _contract, walletConnected }: Props) {
+export default function MigrateTab({ contract, network, walletConnected }: Props) {
+  const { address, signer } = useWallet();
   const [codeId, setCodeId] = useState('');
   const [msg, setMsg] = useState('{}');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ txhash: string; newCodeId: string } | null>(null);
+  const [result, setResult] = useState<{ txhash: string; newCodeId: string; explorer: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleMigrate = async () => {
-    if (!walletConnected) { setError('Wallet not connected.'); return; }
     if (!codeId) { setError('New Code ID is required.'); return; }
-    setLoading(true); setResult(null); setError(null);
-    await sleep(2200);
-    setLoading(false);
+
+    let parsedMsg: unknown;
     try {
-      JSON.parse(msg);
-      setResult({ txhash: MOCK_TX, newCodeId: codeId });
+      parsedMsg = JSON.parse(msg);
     } catch {
       setError('Invalid JSON in migrate message.');
+      return;
+    }
+
+    if (!address || !signer) {
+      setError('Wallet not connected. Click "Connect Wallet" in the navbar.');
+      return;
+    }
+
+    const net = NETWORKS.find(n => n.id === network);
+    if (!net) { setError('Unknown network.'); return; }
+
+    setLoading(true);
+    setResult(null);
+    setError(null);
+
+    try {
+      const client = await SigningCosmWasmClient.connectWithSigner(
+        net.rpcUrl,
+        signer,
+        { gasPrice: GasPrice.fromString(net.gasPrice) },
+      );
+      const res = await client.migrate(address, contract.address, Number(codeId), parsedMsg as Record<string, unknown>, 'auto');
+      setResult({ txhash: res.transactionHash, newCodeId: codeId, explorer: net.explorer });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Migration failed.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -66,7 +94,7 @@ export default function MigrateTab({ contract: _contract, walletConnected }: Pro
             <span className="success-tx">{trunc(result.txhash, 16, 8)}</span>
             <CopyBtn text={result.txhash} />
           </div>
-          <a className="explorer-link" href={`https://www.mintscan.io/osmosis/tx/${result.txhash}`} target="_blank" rel="noopener noreferrer">
+          <a className="explorer-link" href={`${result.explorer}${result.txhash}`} target="_blank" rel="noopener noreferrer">
             View on Mintscan ↗
           </a>
         </div>

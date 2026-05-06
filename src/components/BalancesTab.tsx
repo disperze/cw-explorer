@@ -1,9 +1,53 @@
-import { useState, useEffect } from 'react';
-import { MOCK_BALANCES } from '../data';
+import { useState, useEffect, useCallback } from 'react';
+import { StargateClient } from '@cosmjs/stargate';
+import { NETWORKS } from '../data';
 import { syntaxHighlight } from '../utils';
 import type { Contract, TokenBalance } from '../data';
 
-interface Props { contract: Contract; }
+interface Props {
+  contract: Contract;
+  network: string;
+}
+
+const DENOM_META: Record<string, { display: string; exponent: number; logo: string }> = {
+  uosmo:  { display: 'OSMO',  exponent: 6, logo: 'O' },
+  uatom:  { display: 'ATOM',  exponent: 6, logo: 'A' },
+  ujuno:  { display: 'JUNO',  exponent: 6, logo: 'J' },
+  untrn:  { display: 'NTRN',  exponent: 6, logo: 'N' },
+  ustars: { display: 'STARS', exponent: 6, logo: '★' },
+  uusdc:  { display: 'USDC',  exponent: 6, logo: '$' },
+};
+
+function denomFallback(baseDenom: string): { display: string; exponent: number; logo: string } {
+  if (baseDenom.startsWith('u') && baseDenom.length > 1) {
+    const sym = baseDenom.slice(1).toUpperCase();
+    return { display: sym, exponent: 6, logo: sym[0] };
+  }
+  const sym = baseDenom.toUpperCase().slice(0, 6);
+  return { display: sym, exponent: 0, logo: sym[0] };
+}
+
+async function resolveTokenBalance(
+  denom: string,
+  amount: string,
+  restUrl: string,
+): Promise<TokenBalance> {
+  if (denom.startsWith('ibc/')) {
+    const hash = denom.slice(4);
+    try {
+      const res = await fetch(`${restUrl}/ibc/apps/transfer/v1/denom_traces/${hash}`);
+      const data = await res.json() as { denom_trace?: { base_denom?: string } };
+      const baseDenom = data.denom_trace?.base_denom ?? denom;
+      const meta = DENOM_META[baseDenom] ?? denomFallback(baseDenom);
+      return { denom, amount, display: `${meta.display} (IBC)`, exponent: meta.exponent, logo: '↔' };
+    } catch {
+      return { denom, amount, display: 'IBC', exponent: 0, logo: '↔' };
+    }
+  }
+
+  const meta = DENOM_META[denom] ?? denomFallback(denom);
+  return { denom, amount, ...meta };
+}
 
 function fmt(amount: string, exp: number): string {
   const n = Number(amount) / Math.pow(10, exp);
@@ -14,25 +58,37 @@ function truncDenom(d: string): string {
   return d.length > 36 ? d.slice(0, 18) + '…' + d.slice(-10) : d;
 }
 
-export default function BalancesTab({ contract }: Props) {
+export default function BalancesTab({ contract, network }: Props) {
   const [loading, setLoading] = useState(true);
   const [balances, setBalances] = useState<TokenBalance[]>([]);
-  const [error] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [refresh, setRefresh] = useState(0);
 
-  useEffect(() => {
+  const fetchBalances = useCallback(async () => {
+    const net = NETWORKS.find(n => n.id === network);
+    if (!net) { setError('Unknown network.'); setLoading(false); return; }
+
     setLoading(true);
+    setError(null);
     setBalances([]);
-    const t = setTimeout(() => {
-      setLoading(false);
-      setBalances(MOCK_BALANCES);
-    }, 1000);
-    return () => clearTimeout(t);
-  }, [contract.address]);
 
-  const handleRefresh = () => {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 900);
-  };
+    try {
+      const client = await StargateClient.connect(net.rpcUrl);
+      const coins = await client.getAllBalances(contract.address);
+      const resolved = await Promise.all(
+        coins.map(c => resolveTokenBalance(c.denom, c.amount, net.restUrl)),
+      );
+      setBalances(resolved);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to fetch balances.');
+    } finally {
+      setLoading(false);
+    }
+  }, [contract.address, network]);
+
+  useEffect(() => { fetchBalances(); }, [fetchBalances, refresh]);
+
+  const handleRefresh = () => setRefresh(r => r + 1);
 
   return (
     <div>

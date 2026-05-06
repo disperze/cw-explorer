@@ -51,9 +51,9 @@ export default function ContractDetailPage({ contract, walletConnected, network,
       </div>
 
       {tab === 'query' && <QueryTab contract={contract} network={network} />}
-      {tab === 'execute' && <ExecuteTab contract={contract} walletConnected={walletConnected} />}
-      {tab === 'migrate' && <MigrateTab contract={contract} walletConnected={walletConnected} />}
-      {tab === 'balances' && <BalancesTab contract={contract} />}
+      {tab === 'execute' && <ExecuteTab contract={contract} network={network} walletConnected={walletConnected} />}
+      {tab === 'migrate' && <MigrateTab contract={contract} network={network} walletConnected={walletConnected} />}
+      {tab === 'balances' && <BalancesTab contract={contract} network={network} />}
     </div>
   );
 }
