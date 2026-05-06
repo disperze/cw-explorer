@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import { SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
+import { GasPrice } from '@cosmjs/stargate';
 import { NETWORKS } from '../data';
-import { sleep, trunc } from '../utils';
+import { trunc } from '../utils';
+import { useWallet } from '../context/WalletContext';
 import CopyBtn from './CopyBtn';
 import type { Page } from '../data';
 
@@ -12,10 +15,8 @@ interface Props {
 
 interface Fund { amount: string; denom: string; }
 
-const MOCK_TX = 'C3D4E5F6A1B2789012345678901234567890ABCDEF1234567890ABCDEF123456';
-const MOCK_CONTRACT_ADDR = 'osmo1newcontract4x9gfkw4uqz2s8v3n0y5gfz8hkl4rt2xj9p7mq5abc';
-
 export default function CreatePage({ walletConnected, network, setPage }: Props) {
+  const { address, signer } = useWallet();
   const [codeId, setCodeId] = useState('');
   const [label, setLabel] = useState('');
   const [msg, setMsg] = useState('{\n  \n}');
@@ -35,14 +36,42 @@ export default function CreatePage({ walletConnected, network, setPage }: Props)
     if (!walletConnected) { setError('Wallet not connected.'); return; }
     if (!codeId) { setError('Code ID is required.'); return; }
     if (!label.trim()) { setError('Label is required.'); return; }
-    setLoading(true); setResult(null); setError(null);
-    await sleep(2200);
-    setLoading(false);
+
+    let parsedMsg: unknown;
     try {
-      JSON.parse(msg);
-      setResult({ txhash: MOCK_TX, contractAddr: MOCK_CONTRACT_ADDR, codeId });
+      parsedMsg = JSON.parse(msg);
     } catch {
       setError('Invalid JSON in instantiate message.');
+      return;
+    }
+
+    if (!address || !signer) { setError('Wallet not connected.'); return; }
+
+    const net = NETWORKS.find(n => n.id === network);
+    if (!net) { setError('Unknown network.'); return; }
+
+    setLoading(true); setResult(null); setError(null);
+
+    try {
+      const client = await SigningCosmWasmClient.connectWithSigner(
+        net.rpcUrl,
+        signer,
+        { gasPrice: GasPrice.fromString(net.gasPrice) },
+      );
+      const validFunds = funds.filter(f => f.amount && f.denom);
+      const res = await client.instantiate(
+        address,
+        Number(codeId),
+        parsedMsg as Record<string, unknown>,
+        label,
+        'auto',
+        validFunds.length ? { funds: validFunds } : {},
+      );
+      setResult({ txhash: res.transactionHash, contractAddr: res.contractAddress, codeId });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Instantiation failed.');
+    } finally {
+      setLoading(false);
     }
   };
 
