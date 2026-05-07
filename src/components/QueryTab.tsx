@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
+import { getCosmWasmClient } from '../api/clientCache';
 import { syntaxHighlight } from '../utils';
 import { NETWORKS } from '../data';
 import type { Contract } from '../data';
@@ -31,7 +31,7 @@ export default function QueryTab({ contract, network }: Props) {
     try {
       const net = NETWORKS.find(n => n.id === network);
       if (!net) throw new Error('Unknown network.');
-      const client = await CosmWasmClient.connect(net.rpcUrl);
+      const client = await getCosmWasmClient(net.rpcUrl);
       const response = await client.queryContractSmart(contract.address, parsedMsg);
       setResult(response);
     } catch (e) {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
+import { getCosmWasmClient } from '../api/clientCache';
 import { NETWORKS } from '../data';
 import type { Contract } from '../data';
 import { fetchLatestCodeId, fetchContractAddresses } from '../api/wasm';
@@ -46,7 +46,7 @@ export function useContracts(network: string): UseContractsResult {
         }
         const addresses = await fetchContractAddresses(net!.restUrl, latestCodeId, MAX_CONTRACTS);
         if (cancelled) return;
-        const client = await CosmWasmClient.connect(net!.rpcUrl);
+        const client = await getCosmWasmClient(net!.rpcUrl);
         const settled = await Promise.allSettled(
           addresses.slice(0, MAX_CONTRACTS).map(addr => client.getContract(addr))
         );
