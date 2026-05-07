@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { StargateClient } from '@cosmjs/stargate';
+import { getStargateClient } from '../api/clientCache';
 import { NETWORKS } from '../data';
 import { syntaxHighlight } from '../utils';
 import type { Contract, TokenBalance } from '../data';
@@ -73,7 +73,7 @@ export default function BalancesTab({ contract, network }: Props) {
     setBalances([]);
 
     try {
-      const client = await StargateClient.connect(net.rpcUrl);
+      const client = await getStargateClient(net.rpcUrl);
       const coins = await client.getAllBalances(contract.address);
       const resolved = await Promise.all(
         coins.map(c => resolveTokenBalance(c.denom, c.amount, net.restUrl)),
