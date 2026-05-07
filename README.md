@@ -1,73 +1,107 @@
-# React + TypeScript + Vite
+# CosmWasm Explorer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web3 frontend for browsing, querying, and interacting with CosmWasm smart contracts across multiple Cosmos chains. Connect your Keplr wallet to upload, instantiate, execute, and migrate contracts directly from the browser.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Contract list** — browse all deployed CosmWasm contracts on a chain with live pagination and name/address filtering
+- **Direct navigation** — jump to any contract by pasting its address
+- **Query** — send read-only smart queries and inspect JSON responses
+- **Execute** — submit signed transactions to a contract (wallet required)
+- **Migrate** — migrate a contract to a new code ID (wallet required)
+- **Balances** — view token balances held by a contract
+- **Upload** — store a compiled `.wasm` binary on-chain via drag-and-drop (wallet required)
+- **Instantiate** — create a new contract from a code ID with a JSON init message and optional funds (wallet required)
+- **Multi-network** — switch between Cosmos Hub, Osmosis, Juno, Neutron, and Stargaze
 
-## React Compiler
+## Prerequisites
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- [Node.js](https://nodejs.org/) 18 or later
+- [Keplr](https://www.keplr.app/) browser extension (for wallet features)
 
-## Expanding the ESLint configuration
+## Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone https://github.com/disperze/cw-explorer.git
+cd cw-explorer
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Configuration
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+The app works out of the box with public RPC/REST endpoints. To use custom endpoints (recommended for production), create a `.env.local` file in the project root:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+# Cosmos Hub
+VITE_COSMOSHUB_RPC=https://rpc.cosmos.network
+VITE_COSMOSHUB_REST=https://api.cosmos.network
+
+# Osmosis
+VITE_OSMOSIS_RPC=https://rpc.osmosis.zone
+VITE_OSMOSIS_REST=https://lcd.osmosis.zone
+
+# Juno
+VITE_JUNO_RPC=https://rpc.juno.strange.love
+VITE_JUNO_REST=https://api.juno.strange.love
+
+# Neutron
+VITE_NEUTRON_RPC=https://rpc-kralum.neutron-1.neutron.org
+VITE_NEUTRON_REST=https://rest-kralum.neutron-1.neutron.org
+
+# Stargaze
+VITE_STARGAZE_RPC=https://rpc.stargaze-1.publicnode.com
+VITE_STARGAZE_REST=https://rest.stargaze-1.publicnode.com
 ```
+
+All variables are optional — any variable not set falls back to the default public endpoint shown above.
+
+## Running locally
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+## Building for production
+
+```bash
+npm run build
+```
+
+The output is written to `dist/`. Serve it with any static file host (Vercel, Netlify, Nginx, etc.).
+
+To preview the production build locally:
+
+```bash
+npm run preview
+```
+
+## Stack
+
+| Layer | Library |
+|---|---|
+| UI framework | React 19 + TypeScript |
+| Bundler | Vite |
+| Chain client | CosmJS (`@cosmjs/cosmwasm-stargate`, `@cosmjs/stargate`) |
+| Wallet | Keplr (`@keplr-wallet/types`) |
+
+## Supported networks
+
+| Network | Chain ID |
+|---|---|
+| Cosmos Hub | `cosmoshub-4` |
+| Osmosis | `osmosis-1` |
+| Juno | `juno-1` |
+| Neutron | `neutron-1` |
+| Stargaze | `stargaze-1` |
+
+## Usage
+
+1. Open the app and select a network from the top navigation bar.
+2. The contract list loads automatically. Use the filter input to search by name or address, or paste an address in the **Go to contract** field to navigate directly.
+3. Click any contract row to open the detail view with **Query**, **Execute**, **Migrate**, and **Balances** tabs.
+4. To upload a new `.wasm` binary, click **Upload** in the navbar, connect Keplr, then drag-and-drop or select your file.
+5. To instantiate a contract, click **Create**, enter the code ID, a label, an instantiate message (JSON), and optional funds.
+
+Transactions link out to [Mintscan](https://www.mintscan.io/) for easy on-chain verification.
