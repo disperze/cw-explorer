@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Navbar from './components/Navbar';
 import ContractListPage from './components/ContractListPage';
 import ContractDetailPage from './components/ContractDetailPage';
+import CodesListPage from './components/CodesListPage';
 import UploadPage from './components/UploadPage';
 import CreatePage from './components/CreatePage';
 import { WalletProvider, useWallet } from './context/WalletContext';
@@ -22,6 +23,7 @@ function AppInner() {
   return (
     <>
       <Navbar
+        page={page}
         network={network}
         setNetwork={handleSetNetwork}
         setPage={setPage}
@@ -42,6 +44,9 @@ function AppInner() {
           network={network}
           setPage={setPage}
         />
+      )}
+      {page === 'codes' && (
+        <CodesListPage key={network} network={network} setPage={setPage} />
       )}
       {page === 'upload' && (
         <UploadPage walletConnected={walletConnected} network={network} setPage={setPage} />

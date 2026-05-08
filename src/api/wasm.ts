@@ -1,5 +1,11 @@
+interface CodeInfo {
+  code_id: string;
+  creator: string;
+  data_hash: string;
+}
+
 interface CodeListResponse {
-  code_infos?: { code_id: string }[];
+  code_infos?: CodeInfo[];
 }
 
 interface ContractsByCodeResponse {
@@ -13,6 +19,19 @@ export async function fetchLatestCodeId(restUrl: string): Promise<number | null>
   const infos = json.code_infos ?? [];
   if (infos.length === 0) return null;
   return parseInt(infos[0].code_id, 10);
+}
+
+export async function fetchCodes(restUrl: string, limit: number): Promise<import('../data').Code[]> {
+  const res = await fetch(
+    `${restUrl}/cosmwasm/wasm/v1/code?pagination.reverse=true&pagination.limit=${limit}`
+  );
+  if (!res.ok) throw new Error(`Failed to fetch codes: ${res.status}`);
+  const json: CodeListResponse = await res.json();
+  return (json.code_infos ?? []).map(info => ({
+    id: parseInt(info.code_id, 10),
+    creator: info.creator ?? '',
+    dataHash: info.data_hash ?? '',
+  }));
 }
 
 export async function fetchContractAddresses(

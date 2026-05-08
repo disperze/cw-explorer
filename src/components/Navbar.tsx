@@ -5,12 +5,13 @@ import { useWallet } from '../context/WalletContext';
 import type { Page } from '../data';
 
 interface Props {
+  page: Page;
   network: string;
   setNetwork: (n: string) => void;
   setPage: (p: Page) => void;
 }
 
-export default function Navbar({ network, setNetwork, setPage }: Props) {
+export default function Navbar({ page, network, setNetwork, setPage }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [keplrMissing, setKeplrMissing] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -59,6 +60,20 @@ export default function Navbar({ network, setNetwork, setPage }: Props) {
         <div className="navbar-logo-mark">CW</div>
         <span>CosmWasm</span>
       </div>
+      <nav className="navbar-links">
+        <button
+          className={`nav-link${page === 'list' ? ' active' : ''}`}
+          onClick={() => setPage('list')}
+        >
+          Contracts
+        </button>
+        <button
+          className={`nav-link${page === 'codes' ? ' active' : ''}`}
+          onClick={() => setPage('codes')}
+        >
+          Codes
+        </button>
+      </nav>
       <div className="navbar-spacer" />
       <div className="navbar-actions">
         <select className="net-select" value={network} onChange={e => setNetwork(e.target.value)}>

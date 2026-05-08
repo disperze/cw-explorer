@@ -21,7 +21,13 @@ export interface TokenBalance {
   logo: string;
 }
 
-export type Page = 'list' | 'detail' | 'upload' | 'create';
+export interface Code {
+  id: number;
+  creator: string;
+  dataHash: string;
+}
+
+export type Page = 'list' | 'detail' | 'upload' | 'create' | 'codes';
 
 export const NETWORKS: Network[] = [
   {
