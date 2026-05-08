@@ -70,6 +70,16 @@ body.no-scanlines::before { display: none; }
   box-shadow: 0 0 8px var(--accent-glow);
 }
 .navbar-spacer { flex: 1; }
+.navbar-links { display: flex; align-items: center; gap: 2px; margin-left: 20px; }
+.nav-link {
+  background: none; border: none; cursor: pointer;
+  font-family: var(--mono); font-size: 12px; font-weight: 500;
+  color: var(--text2); letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.nav-link:hover { color: var(--text0); background: var(--bg2); }
+.nav-link.active { color: var(--accent); }
 .navbar-actions { display: flex; align-items: center; gap: 6px; }
 
 /* Network dropdown */
