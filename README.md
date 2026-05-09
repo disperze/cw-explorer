@@ -12,7 +12,7 @@ A web3 frontend for browsing, querying, and interacting with CosmWasm smart cont
 - **Balances** — view token balances held by a contract
 - **Upload** — store a compiled `.wasm` binary on-chain via drag-and-drop (wallet required)
 - **Instantiate** — create a new contract from a code ID with a JSON init message and optional funds (wallet required)
-- **Multi-network** — switch between Cosmos Hub, Osmosis, Juno, Neutron, and Stargaze
+- **Multi-network** — switch between Cosmos Hub, Osmosis, Juno and Neutron
 
 ## Prerequisites
 
@@ -47,10 +47,6 @@ VITE_JUNO_REST=https://api.juno.strange.love
 # Neutron
 VITE_NEUTRON_RPC=https://rpc-kralum.neutron-1.neutron.org
 VITE_NEUTRON_REST=https://rest-kralum.neutron-1.neutron.org
-
-# Stargaze
-VITE_STARGAZE_RPC=https://rpc.stargaze-1.publicnode.com
-VITE_STARGAZE_REST=https://rest.stargaze-1.publicnode.com
 ```
 
 All variables are optional — any variable not set falls back to the default public endpoint shown above.
@@ -94,7 +90,6 @@ npm run preview
 | Osmosis | `osmosis-1` |
 | Juno | `juno-1` |
 | Neutron | `neutron-1` |
-| Stargaze | `stargaze-1` |
 
 ## Usage
 
