@@ -1,22 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { NETWORKS } from '../data';
 import { trunc } from '../utils';
 import { useWallet } from '../context/WalletContext';
-import type { Page } from '../data';
+import { useNetwork } from '../hooks/useNetwork';
 
-interface Props {
-  page: Page;
-  network: string;
-  setNetwork: (n: string) => void;
-  setPage: (p: Page) => void;
-}
-
-export default function Navbar({ page, network, setNetwork, setPage }: Props) {
+export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [keplrMissing, setKeplrMissing] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { address, connect, disconnect } = useWallet();
+  const [network, setNetwork] = useNetwork();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setKeplrMissing(!window.keplr);
@@ -39,7 +35,7 @@ export default function Navbar({ page, network, setNetwork, setPage }: Props) {
     return () => document.removeEventListener('mousedown', handler);
   }, [menuOpen]);
 
-  const navTo = (p: Page) => { setMenuOpen(false); setPage(p); };
+  const navTo = (path: string) => { setMenuOpen(false); navigate(path); };
 
   const handleConnect = async () => {
     if (!window.keplr) {
@@ -56,23 +52,24 @@ export default function Navbar({ page, network, setNetwork, setPage }: Props) {
 
   return (
     <nav className="navbar">
-      <div className="navbar-logo" onClick={() => setPage('list')}>
+      <div className="navbar-logo" onClick={() => navigate('/')}>
         <div className="navbar-logo-mark">CW</div>
         <span>CosmWasm</span>
       </div>
       <nav className="navbar-links">
-        <button
-          className={`nav-link${page === 'list' ? ' active' : ''}`}
-          onClick={() => setPage('list')}
+        <NavLink
+          to="/"
+          end
+          className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
         >
           Contracts
-        </button>
-        <button
-          className={`nav-link${page === 'codes' ? ' active' : ''}`}
-          onClick={() => setPage('codes')}
+        </NavLink>
+        <NavLink
+          to="/codes"
+          className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
         >
           Codes
-        </button>
+        </NavLink>
       </nav>
       <div className="navbar-spacer" />
       <div className="navbar-actions">
@@ -103,14 +100,14 @@ export default function Navbar({ page, network, setNetwork, setPage }: Props) {
                   <div className="wallet-dropdown-label">Connected</div>
                   <div className="wallet-dropdown-addr">{address}</div>
                 </div>
-                <button className="wallet-dropdown-item" onClick={() => navTo('upload')}>
+                <button className="wallet-dropdown-item" onClick={() => navTo('/upload')}>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <rect x="2" y="3" width="10" height="9" rx="1" stroke="currentColor" strokeWidth="1.2"/>
                     <path d="M5 6l2-2 2 2M7 4v5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                   Upload Wasm
                 </button>
-                <button className="wallet-dropdown-item" onClick={() => navTo('create')}>
+                <button className="wallet-dropdown-item" onClick={() => navTo('/create')}>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <rect x="2" y="2" width="10" height="10" rx="1" stroke="currentColor" strokeWidth="1.2"/>
                     <path d="M7 5v4M5 7h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ContractListPage from './components/ContractListPage';
 import ContractDetailPage from './components/ContractDetailPage';
@@ -6,54 +6,22 @@ import CodesListPage from './components/CodesListPage';
 import UploadPage from './components/UploadPage';
 import CreatePage from './components/CreatePage';
 import { WalletProvider, useWallet } from './context/WalletContext';
-import type { Contract, Page } from './data';
 
 function AppInner() {
-  const [page, setPage] = useState<Page>('list');
-  const [network, setNetwork] = useState('osmosis-1');
-  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const { address } = useWallet();
   const walletConnected = address !== null;
 
-  const handleSetNetwork = (n: string) => {
-    setNetwork(n);
-    if (page === 'detail') setPage('list');
-  };
-
   return (
     <>
-      <Navbar
-        page={page}
-        network={network}
-        setNetwork={handleSetNetwork}
-        setPage={setPage}
-      />
-      {page === 'list' && (
-        <ContractListPage
-          key={network}
-          network={network}
-          setPage={setPage}
-          setSelectedContract={setSelectedContract}
-        />
-      )}
-      {page === 'detail' && selectedContract && (
-        <ContractDetailPage
-          key={selectedContract.address}
-          contract={selectedContract}
-          walletConnected={walletConnected}
-          network={network}
-          setPage={setPage}
-        />
-      )}
-      {page === 'codes' && (
-        <CodesListPage key={network} network={network} setPage={setPage} />
-      )}
-      {page === 'upload' && (
-        <UploadPage walletConnected={walletConnected} network={network} setPage={setPage} />
-      )}
-      {page === 'create' && (
-        <CreatePage walletConnected={walletConnected} network={network} setPage={setPage} />
-      )}
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<ContractListPage />} />
+        <Route path="/codes" element={<CodesListPage />} />
+        <Route path="/upload" element={<UploadPage walletConnected={walletConnected} />} />
+        <Route path="/create" element={<CreatePage walletConnected={walletConnected} />} />
+        <Route path="/contract/:address" element={<ContractDetailPage walletConnected={walletConnected} />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </>
   );
 }
@@ -61,7 +29,9 @@ function AppInner() {
 export default function App() {
   return (
     <WalletProvider>
-      <AppInner />
+      <HashRouter>
+        <AppInner />
+      </HashRouter>
     </WalletProvider>
   );
 }

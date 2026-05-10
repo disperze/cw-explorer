@@ -1,18 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { NETWORKS } from '../data';
 import { trunc } from '../utils';
-import type { Contract, Page } from '../data';
 import { useContracts } from '../hooks/useContracts';
+import { useNetwork } from '../hooks/useNetwork';
 
 const PAGE_SIZE = 5;
 
-interface Props {
-  network: string;
-  setPage: (p: Page) => void;
-  setSelectedContract: (c: Contract) => void;
-}
-
-export default function ContractListPage({ network, setPage, setSelectedContract }: Props) {
+export default function ContractListPage() {
+  const [network] = useNetwork();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [gotoAddr, setGotoAddr] = useState('');
@@ -35,8 +32,7 @@ export default function ContractListPage({ network, setPage, setSelectedContract
 
   const handleGoto = () => {
     if (!gotoAddr.trim()) return;
-    setSelectedContract({ name: 'Unknown Contract', address: gotoAddr.trim(), creator: '—' });
-    setPage('detail');
+    navigate(`/contract/${gotoAddr.trim()}`);
   };
 
   return (
@@ -89,7 +85,7 @@ export default function ContractListPage({ network, setPage, setSelectedContract
             <div
               className="contract-row"
               key={c.address}
-              onClick={() => { setSelectedContract(c); setPage('detail'); }}
+              onClick={() => navigate(`/contract/${c.address}`)}
             >
               <span className="row-index">{String((page - 1) * PAGE_SIZE + i + 1).padStart(2, '0')}</span>
               <span className="row-name">{c.name}</span>

@@ -1,17 +1,13 @@
 import { useState, useEffect } from 'react';
 import { NETWORKS } from '../data';
 import { trunc } from '../utils';
-import type { Page } from '../data';
 import { useCodes } from '../hooks/useCodes';
+import { useNetwork } from '../hooks/useNetwork';
 
 const PAGE_SIZE = 5;
 
-interface Props {
-  network: string;
-  setPage: (p: Page) => void;
-}
-
-export default function CodesListPage({ network, setPage: _setPage }: Props) {
+export default function CodesListPage() {
+  const [network] = useNetwork();
   const [filter, setFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const { codes, loading, error, switching } = useCodes(network);

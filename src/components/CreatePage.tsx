@@ -1,22 +1,23 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 import { GasPrice } from '@cosmjs/stargate';
 import { NETWORKS } from '../data';
 import { trunc } from '../utils';
 import { useWallet } from '../context/WalletContext';
+import { useNetwork } from '../hooks/useNetwork';
 import CopyBtn from './CopyBtn';
-import type { Page } from '../data';
 
 interface Props {
   walletConnected: boolean;
-  network: string;
-  setPage: (p: Page) => void;
 }
 
 interface Fund { amount: string; denom: string; }
 
-export default function CreatePage({ walletConnected, network, setPage }: Props) {
+export default function CreatePage({ walletConnected }: Props) {
   const { address, signer } = useWallet();
+  const [network] = useNetwork();
+  const navigate = useNavigate();
   const [codeId, setCodeId] = useState('');
   const [label, setLabel] = useState('');
   const [msg, setMsg] = useState('{\n  \n}');
@@ -77,7 +78,7 @@ export default function CreatePage({ walletConnected, network, setPage }: Props)
 
   return (
     <div className="page page-narrow page-enter">
-      <button className="back-link" onClick={() => setPage('list')}>← Contracts</button>
+      <button className="back-link" onClick={() => navigate('/')}>← Contracts</button>
       <div className="page-header">
         <h1 className="page-title">
           Create Contract
