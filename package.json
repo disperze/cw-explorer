@@ -20,6 +20,15 @@
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.15.0"
   },
+  "overrides": {
+    "@cosmjs/cosmwasm": "^0.39.0",
+    "@cosmjs/stargate": "^0.39.0",
+    "@cosmjs/proto-signing": "^0.39.0",
+    "@cosmjs/amino": "^0.39.0",
+    "@cosmjs/math": "^0.39.0",
+    "@cosmjs/crypto": "^0.39.0",
+    "@cosmjs/tendermint-rpc": "^0.39.0"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.12.2",
