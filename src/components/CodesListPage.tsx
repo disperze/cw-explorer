@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { NETWORKS } from '../data';
 import { trunc } from '../utils';
 import { useCodes } from '../hooks/useCodes';
@@ -8,6 +9,7 @@ const PAGE_SIZE = 5;
 
 export default function CodesListPage() {
   const [network] = useNetwork();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const { codes, loading, error, switching } = useCodes(network);
@@ -73,10 +75,11 @@ export default function CodesListPage() {
       ) : (
         <div className="contract-table">
           {shown.map((c, i) => (
-            <div className="contract-row" key={c.id}>
+            <div className="contract-row" key={c.id} onClick={() => navigate(`/codes/${c.id}`)}>
               <span className="row-index">{String((page - 1) * PAGE_SIZE + i + 1).padStart(2, '0')}</span>
               <span className="row-name">#{c.id}</span>
               <span className="row-creator">{trunc(c.creator, 14, 8)}</span>
+              <span className="row-arrow">›</span>
             </div>
           ))}
         </div>

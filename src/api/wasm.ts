@@ -8,6 +8,10 @@ interface CodeListResponse {
   code_infos?: CodeInfo[];
 }
 
+interface SingleCodeResponse {
+  code_info?: CodeInfo;
+}
+
 interface ContractsByCodeResponse {
   contracts?: string[];
 }
@@ -32,6 +36,26 @@ export async function fetchCodes(restUrl: string, limit: number): Promise<import
     creator: info.creator ?? '',
     dataHash: info.data_hash ?? '',
   }));
+}
+
+export async function fetchCodeInfo(restUrl: string, codeId: number): Promise<import('../data').Code> {
+  const res = await fetch(`${restUrl}/cosmwasm/wasm/v1/code/${codeId}`);
+  if (!res.ok) throw new Error(`Failed to fetch code: ${res.status}`);
+  const json: SingleCodeResponse = await res.json();
+  const info = json.code_info;
+  if (!info) throw new Error('Code not found.');
+  return {
+    id: parseInt(info.code_id, 10),
+    creator: info.creator ?? '',
+    dataHash: info.data_hash ?? '',
+  };
+}
+
+export async function fetchCodeContracts(restUrl: string, codeId: number): Promise<string[]> {
+  const res = await fetch(`${restUrl}/cosmwasm/wasm/v1/code/${codeId}/contracts?pagination.limit=50`);
+  if (!res.ok) throw new Error(`Failed to fetch contracts for code: ${res.status}`);
+  const json: ContractsByCodeResponse = await res.json();
+  return json.contracts ?? [];
 }
 
 export async function fetchContractAddresses(
