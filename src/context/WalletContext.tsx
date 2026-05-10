@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { OfflineSigner } from '@cosmjs/proto-signing';
 
 interface WalletContextValue {
@@ -21,12 +21,21 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     const accounts = await offlineSigner.getAccounts();
     setSigner(offlineSigner);
     setAddress(accounts[0].address);
+    try { localStorage.setItem('cw_wallet_address', accounts[0].address); } catch { /* ignore */ }
   }, []);
 
   const disconnect = useCallback(() => {
     setSigner(null);
     setAddress(null);
+    try { localStorage.removeItem('cw_wallet_address'); } catch { /* ignore */ }
   }, []);
+
+  useEffect(() => {
+    const saved = (() => { try { return localStorage.getItem('cw_wallet_address'); } catch { return null; } })();
+    if (!saved) return;
+    const net = (() => { try { return localStorage.getItem('cw_network') ?? 'osmosis-1'; } catch { return 'osmosis-1'; } })();
+    connect(net).catch(() => { try { localStorage.removeItem('cw_wallet_address'); } catch { /* ignore */ } });
+  }, [connect]);
 
   return (
     <WalletContext.Provider value={{ address, signer, connect, disconnect }}>
